@@ -1,0 +1,137 @@
+/* @import './base.css'; */
+@import 'https://unpkg.com/ress/dist/ress.min.css';
+
+body {
+  color: #685641;
+  font-family:
+    'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+}
+
+#app {
+  display: grid;
+  grid-template-rows: auto 2fr;
+  max-height: 100vh;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-weight: normal;
+}
+
+#header-area {
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+#add-area {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+#add-text {
+  border: #8b2f45 solid 1px;
+  color: #e2989b;
+  width: 70%;
+  padding: 0.5rem;
+  margin: 0 2px 0 0;
+}
+
+#mod-text {
+  background-color: #ffffff;
+  border: #8b2f45 solid 1px;
+  color: #e2989b;
+  max-width: 100%;
+  padding: 0.5rem;
+  margin: 0;
+}
+
+button {
+  background-color: #fff6f6;
+  color: #8b2f45;
+  padding: 0.5rem 1rem;
+
+  border-radius: 0.5rem;
+  border: #8b2f45 solid 1px;
+}
+
+#addtodo-area {
+  margin-bottom: 1rem;
+}
+
+#main-area {
+  display: grid;
+  grid-template-rows: auto auto auto;
+}
+
+#list-area {
+  display: grid;
+  grid-template-rows: auto;
+  height: fit-content;
+  margin-bottom: 10px;
+}
+
+#list-header {
+  display: grid;
+  grid-template-columns: 4rem auto 10rem;
+  align-items: center;
+  background-color: #d0826c;
+  color: #fff;
+  line-height: 1;
+  height: fit-content;
+  padding: 0.5rem;
+  border-radius: 1rem 1rem 0 0;
+}
+
+.list-detail {
+  display: grid;
+  grid-template-columns: 4rem auto 10rem;
+  align-items: center;
+  background-color: #fde8d0;
+  color: #685641;
+  height: max-content;
+  padding: 0.5rem;
+  margin: 5px 0 0;
+  border-radius: 1rem;
+}
+
+.list-detail button {
+  margin-right: 2px;
+}
+
+.task {
+  padding: 0 10px;
+}
+
+.completion-checkbox {
+  text-align: center;
+}
+
+.task-area {
+  min-width: 200px;
+}
+
+#summary-area {
+  width: 100%;
+  background-color: #f8d192;
+  padding: 0.5rem 0 0.5rem 1rem;
+  margin-top: 5px;
+  border-radius: 0 0 1rem 1rem;
+}
+
+.completion {
+  text-decoration: line-through;
+  background-color: #e6e6e6;
+}
+
+.mod {
+  background-color: #fffead;
+}
+
+#switching-area button {
+  margin-right: 5px;
+}
+
+:disabled {
+  background-color: #fff;
+  color: #b8b8b8;
+}
