@@ -1,61 +1,125 @@
 <script setup>
 import { computed, ref } from 'vue'
 
-const addText = ref('') //TODO新規追加
-const modText = ref('') //TODO更新用
+const addTitle = ref('') //TODO新規追加
+const editTitle = ref('') //TODO更新用
 
 let id = 1 //TODOのID(内部用)
 
 const listDatas = ref([]) //TODOリスト表示用配列
 
-const modFlg = ref(false) //編集中フラグ（編集中：true 未編集中：false）
-const modId = ref(0) // 編集中の行ID
+const filterMode = ref('all') //all(すべて)NotIsDone(未完了)(完了済)
+const filterListDatas = computed(() => {
+  if (filterMode.value == 'NotIsDone') {
+    //未完了
+    return listDatas.value.filter((t) => t.isDone === false)
+  } else if (filterMode.value == 'IsDone') {
+    //完了済
+    return listDatas.value.filter((t) => t.isDone === true)
+  } else {
+    //すべて
+    return listDatas.value
+  }
+})
+
+const isEditing = ref(false) //編集中フラグ（編集中：true 未編集中：false）
+const isEditingId = ref(0) // 編集中の行ID
 
 //↓↓サマリ結果表示用const//
 //TODO件数ー全件
 const summaryAll = computed(() => listDatas.value.length)
 
 //TODO件数ー完了
-const summaryCompletion = computed(() => {
-  const list = listDatas.value.filter((t) => t.completion === true)
+const summaryIsDone = computed(() => {
+  const list = listDatas.value.filter((t) => t.isDone === true)
   return list.length
 })
 
 //TODO件数ー未完了
-const summaryNotCompletion = computed(() => {
-  const list = listDatas.value.filter((t) => t.completion === false)
+const summaryNotIsDone = computed(() => {
+  const list = listDatas.value.filter((t) => t.isDone === false)
   return list.length
 })
 
 function listAddNewTodo() {
   //TODOリストにアイテム追加
-  listDatas.value.push({ id: id++, text: addText.value, completion: false })
-  addText.value = ''
+
+  if (dataValidation(addTitle.value)) {
+    //バリデーションチェック OKだったら処理を行う
+
+    let NowDateTime = getDateTime() //更新日時の取得
+
+    listDatas.value.push({
+      id: id++,
+      title: addTitle.value,
+      isDone: false,
+      createdAt: NowDateTime,
+    })
+    addTitle.value = ''
+  }
 }
 
 function listDel(todo) {
   //TODOリストからアイテム削除
-  listDatas.value = listDatas.value.filter((t) => t !== todo)
+  if (confirm('削除します。よろしいですか？')) {
+    //「はい」の場合削除処理実行
+    listDatas.value = listDatas.value.filter((t) => t !== todo)
+  }
 }
 
-function listMod(id) {
+function listEdit(id) {
   //TODOリストのアイテム編集
-  modFlg.value = true //編集中
-  modId.value = id //編集中の行ID
+  isEditing.value = true //編集中
+  isEditingId.value = id //編集中の行ID
 }
 
-function updateText(listdata) {
+function updateTitle(listdata) {
   //TODO明細行更新ボタン押下時処理
-  listdata.text = modText.value
-  modFlg.value = false //未編集中
-  modId.value = 0 // 編集中の行IDなし
-  modText.value = ''
+  if (dataValidation(editTitle.value)) {
+    //バリデーションチェック OKだったら処理を行う
+
+    let NowDateTime = getDateTime() //更新日時の取得
+
+    listdata.title = editTitle.value
+    listdata.createdAt = NowDateTime
+    isEditing.value = false //未編集中
+    isEditingId.value = 0 // 編集中の行IDなし
+    editTitle.value = ''
+  }
 }
 
-function cancelUpdateText() {
+function cancelUpdateTitle() {
   //TODO明細行ｷｬﾝｾﾙボタン押下時処理
-  modFlg.value = false //未編集中
-  modId.value = 0 // 編集中の行IDなし
+  isEditing.value = false //未編集中
+  isEditingId.value = 0 // 編集中の行IDなし
+}
+
+function getDateTime() {
+  //追加・更新日時取得
+  let date = new Date()
+
+  let YYYY = date.getFullYear() //年
+  let MM = String(date.getMonth() + 1).padStart(2, '0') //月
+  let DD = String(date.getDate()).padStart(2, '0') //日
+  let hh = String(date.getHours()).padStart(2, '0') //時間
+  let mm = String(date.getMinutes()).padStart(2, '0') //分
+
+  return YYYY + '-' + MM + '-' + DD + ' ' + hh + ':' + mm
+}
+
+function dataValidation(title) {
+  //追加・更新時にデータのバリデーションを行い、必要なメッセージを表示
+  if (!(title.trim().length > 1)) {
+    //空文字更新チェック
+    alert('入力してください')
+    return false
+  } else if (listDatas.value.length >= 20) {
+    //件数チェック(20件)まで登録可能
+    alert('20件までしか追加できません。タスクを削除してください。')
+    return false
+  }
+
+  return true
 }
 </script>
 
@@ -68,104 +132,85 @@ function cancelUpdateText() {
     <!-- TOD追加エリア -->
     <div id="add-area">
       <input
-        v-model="addText"
+        v-model="addTitle"
         type="text"
-        id="add-text"
+        id="add-title"
         placeholder="新しいタスクを追加"
-        :disabled="modFlg"
+        :disabled="isEditing"
       />
-      <button @click="listAddNewTodo" :disabled="modFlg">追加</button>
+      <button @click="listAddNewTodo" :disabled="isEditing">追加</button>
     </div>
 
     <!-- TODOmemoヘッダ -->
     <div id="list-area">
       <div id="list-header">
-        <div class="completion-checkbox">完了</div>
+        <div class="isDone-checkbox">完了</div>
         <div class="task">タスク名</div>
         <div class="actionButton"></div>
       </div>
 
       <!-- TODOmemo明細 -->
       <div
-        v-for="listData in listDatas"
+        v-for="listData in filterListDatas"
         :key="listData.id"
         class="list-detail"
-        :class="{ completion: listData.completion, mod: modId === listData.id }"
+        :class="{ isDone: listData.isDone, edit: isEditingId === listData.id }"
       >
         <!--完了/未完了チェックボックス-->
-        <div class="completion-checkbox">
-          <input
-            v-model="listData.completion"
-            class="checkbox"
-            type="checkbox"
-            :disabled="modFlg"
-          />
+        <div class="isDone-checkbox">
+          <input v-model="listData.isDone" class="checkbox" type="checkbox" :disabled="isEditing" />
         </div>
 
         <!--TODO更新用フォーム-->
         <input
-          v-if="modFlg && modId === listData.id"
-          v-model="modText"
+          v-if="isEditing && isEditingId === listData.id"
+          v-model="editTitle"
           type="text"
-          id="mod-text"
-          :placeholder="listData.text"
+          id="edit-title"
+          :placeholder="listData.title"
         />
         <!--TODO通常表示用フォーム-->
-        <div class="task" v-else>{{ listData.text }}</div>
+        <div class="task" v-else>
+          {{ listData.title }}<br />
+          <small>{{ listData.createdAt }}</small>
+        </div>
 
         <div class="actionbutton">
           <!--TODO更新用ボタン-->
-          <div class="mod-actionbutton" v-if="modFlg && modId === listData.id">
-            <button @click="updateText(listData)">更新</button>
-            <button @click="cancelUpdateText">ｷｬﾝｾﾙ</button>
+          <div class="edit-actionbutton" v-if="isEditing && isEditingId === listData.id">
+            <button @click="updateTitle(listData)">更新</button>
+            <button @click="cancelUpdateTitle">ｷｬﾝｾﾙ</button>
           </div>
 
           <!--通常表示用ボタン-->
           <div class="default-actionbutton" v-else>
-            <button @click="listMod(listData.id)" :disabled="modFlg && modId !== listData.id">
+            <button
+              @click="listEdit(listData.id)"
+              :disabled="isEditing && isEditingId !== listData.id"
+            >
               編集
             </button>
-            <button @click="listDel(listData)" :disabled="modFlg && modId !== listData.id">
+            <button @click="listDel(listData)" :disabled="isEditing && isEditingId !== listData.id">
               削除
             </button>
           </div>
         </div>
       </div>
-      <!--
-      <div class="list-detail">
-        <div class="completion-checkbox"><input class="checkbox" type="checkbox" /></div>
-        <div class="task">BBBBBBBBBBBBBBBB</div>
-        <div class="button"><button>編集</button><button>削除</button></div>
-      </div>
-      <div class="list-detail mod">
-        <div class="completion-checkbox"><input class="checkbox" type="checkbox" /></div>
-        <div class="task"><input type="text" id="mod-text" value="編集中" /></div>
-        <div class="button"><button>更新</button><button>ｷｬﾝｾﾙ</button></div>
-      </div>
-      <div class="list-detail completion">
-        <div class="completion-checkbox"><input class="checkbox" type="checkbox" /></div>
-        <div class="task">完了済みタスク</div>
-        <div class="button"><button>編集</button><button>削除</button></div>
-      </div>
-      <div class="list-detail">
-        <div class="completion-checkbox"><input class="checkbox" type="checkbox" /></div>
-        <div class="task">他の行を編集中は使用不可</div>
-        <div class="button"><button disabled>編集</button><button disabled>削除</button></div>
-      </div>
-      CSS確認用おわり-->
+
       <!-- TODOmemoサマリ-->
       <p id="summary-area">
         全<span>{{ summaryAll }}</span
-        >件 / 完了<span>{{ summaryCompletion }}</span
-        >件 / 残<span>{{ summaryNotCompletion }}</span
+        >件 / 完了<span>{{ summaryIsDone }}</span
+        >件 / 残<span>{{ summaryNotIsDone }}</span
         >件
       </p>
     </div>
 
     <div id="switching-area">
       タスク表示<br />
-      <button :disabled="modFlg">すべて</button>
-      <button :disabled="modFlg">未完了</button><button :disabled="modFlg">完了済</button>
+      <button @click="filterMode = 'all'" :disabled="isEditing">すべて</button>
+      <button @click="filterMode = 'NotIsDone'" :disabled="isEditing">未完了</button>
+      <button @click="filterMode = 'IsDone'" :disabled="isEditing">完了済</button>
     </div>
   </main>
 </template>
