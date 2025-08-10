@@ -72,7 +72,7 @@ button {
 
 #list-header {
   display: grid;
-  grid-template-columns: 4rem auto 10rem;
+  grid-template-columns: 4rem auto 12rem;
   align-items: center;
   background-color: #d0826c;
   color: #fff;
@@ -84,7 +84,7 @@ button {
 
 .list-detail {
   display: grid;
-  grid-template-columns: 4rem auto 10rem;
+  grid-template-columns: 4rem auto 12rem;
   align-items: center;
   background-color: #fde8d0;
   color: #685641;
