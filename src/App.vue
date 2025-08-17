@@ -8,16 +8,26 @@ let id = 1 //TODOのID(内部用)
 
 const listDatas = ref([]) //TODOリスト表示用配列
 
-const filterMode = ref('all') //all(すべて)NotIsDone(未完了)(完了済)
+//フィルターモード定数
+//all(すべて)NotIsDone(未完了)IsDone(完了済)
+const FILTER_MODES = { ALL: 'all', NOTISDONE: 'NotIsDone', ISDONE: 'IsDone' }
+
+//フィルターモード切替え用コンスト。初期値はタスクすべて表示
+const filterMode = ref(FILTER_MODES.ALL)
+
+//フィルターモード切替え
 const filterListDatas = computed(() => {
-  if (filterMode.value == 'NotIsDone') {
-    //未完了
+  if (filterMode.value == FILTER_MODES.NOTISDONE) {
+    //未完了のみ表示
+
     return listDatas.value.filter((t) => t.isDone === false)
-  } else if (filterMode.value == 'IsDone') {
-    //完了済
+  } else if (filterMode.value == FILTER_MODES.ISDONE) {
+    //完了済のみ表示
+
     return listDatas.value.filter((t) => t.isDone === true)
   } else {
-    //すべて
+    //すべて表示
+
     return listDatas.value
   }
 })
@@ -67,10 +77,11 @@ function listDel(todo) {
   }
 }
 
-function listEdit(id) {
+function listEdit(id, title) {
   //TODOリストのアイテム編集
   isEditing.value = true //編集中
   isEditingId.value = id //編集中の行ID
+  editTitle.value = title //編集前テキスト
 }
 
 function updateTitle(listdata) {
@@ -78,10 +89,9 @@ function updateTitle(listdata) {
   if (dataValidation(editTitle.value)) {
     //バリデーションチェック OKだったら処理を行う
 
-    let NowDateTime = getDateTime() //更新日時の取得
+    listdata.title = editTitle.value //データ更新
 
-    listdata.title = editTitle.value
-    listdata.createdAt = NowDateTime
+    //データ更新後の処理
     isEditing.value = false //未編集中
     isEditingId.value = 0 // 編集中の行IDなし
     editTitle.value = ''
@@ -113,7 +123,8 @@ function dataValidation(title) {
     //空文字更新チェック
     alert('入力してください')
     return false
-  } else if (listDatas.value.length >= 20) {
+  }
+  if (!isEditing.value && listDatas.value.length >= 20) {
     //件数チェック(20件)まで登録可能
     alert('20件までしか追加できません。タスクを削除してください。')
     return false
@@ -123,6 +134,7 @@ function dataValidation(title) {
 }
 </script>
 
+<!-- 以下、UIコード++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
 <template>
   <header id="header-area">
     <h1>TODOメモ</h1>
@@ -167,11 +179,11 @@ function dataValidation(title) {
           v-model="editTitle"
           type="text"
           id="edit-title"
-          :placeholder="listData.title"
         />
         <!--TODO通常表示用フォーム-->
         <div class="task" v-else>
-          {{ listData.title }}<br />
+          <span :class="{ isDone: listData.isDone }">{{ listData.title }}</span
+          ><br />
           <small>{{ listData.createdAt }}</small>
         </div>
 
@@ -184,12 +196,15 @@ function dataValidation(title) {
 
           <!--通常表示用ボタン-->
           <div class="default-actionbutton" v-else>
-            <button
-              @click="listEdit(listData.id)"
-              :disabled="isEditing && isEditingId !== listData.id"
-            >
-              編集
-            </button>
+            <div id="button-layout">
+              <button
+                @click="listEdit(listData.id, listData.title)"
+                :disabled="isEditing && isEditingId !== listData.id"
+                v-show="!listData.isDone"
+              >
+                編集
+              </button>
+            </div>
             <button @click="listDel(listData)" :disabled="isEditing && isEditingId !== listData.id">
               削除
             </button>
@@ -208,9 +223,9 @@ function dataValidation(title) {
 
     <div id="switching-area">
       タスク表示<br />
-      <button @click="filterMode = 'all'" :disabled="isEditing">すべて</button>
-      <button @click="filterMode = 'NotIsDone'" :disabled="isEditing">未完了</button>
-      <button @click="filterMode = 'IsDone'" :disabled="isEditing">完了済</button>
+      <button @click="filterMode = FILTER_MODES.ALL" :disabled="isEditing">すべて</button>
+      <button @click="filterMode = FILTER_MODES.NOTISDONE" :disabled="isEditing">未完了</button>
+      <button @click="filterMode = FILTER_MODES.ISDONE" :disabled="isEditing">完了済</button>
     </div>
   </main>
 </template>

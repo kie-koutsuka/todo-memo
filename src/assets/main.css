@@ -30,7 +30,6 @@ body {
 
 #add-title {
   border: #8b2f45 solid 1px;
-  color: #e2989b;
   width: 70%;
   padding: 0.5rem;
   margin: 0 2px 0 0;
@@ -39,7 +38,6 @@ body {
 #edit-title {
   background-color: #ffffff;
   border: #8b2f45 solid 1px;
-  color: #e2989b;
   max-width: 100%;
   padding: 0.5rem;
   margin: 0;
@@ -52,6 +50,13 @@ button {
 
   border-radius: 0.5rem;
   border: #8b2f45 solid 1px;
+}
+
+#button-layout {
+  /*編集ボタン非表示時のレイアウト用*/
+  display: inline-block;
+  min-width: 4rem;
+  text-align: left;
 }
 
 #addtodo-area {
@@ -119,8 +124,11 @@ button {
 }
 
 .isDone {
-  text-decoration: line-through;
   background-color: #e6e6e6;
+}
+
+.list-detail .isDone {
+  text-decoration: line-through;
 }
 
 .edit {
