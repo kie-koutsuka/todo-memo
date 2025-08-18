@@ -1,7 +1,8 @@
 <script setup>
 import { computed, ref } from 'vue'
+import todoAddArea from './todoAddArea.vue'
+import todoSwitchingArea from './todoSwitchingArea.vue'
 
-const addTitle = ref('') //TODO新規追加
 const editTitle = ref('') //TODO更新用
 
 let id = 1 //TODOのID(内部用)
@@ -51,21 +52,19 @@ const summaryNotIsDone = computed(() => {
   return list.length
 })
 
-function listAddNewTodo() {
+function listAddNewTodo(addTitle) {
   //TODOリストにアイテム追加
-
-  if (dataValidation(addTitle.value)) {
+  if (dataValidation(addTitle)) {
     //バリデーションチェック OKだったら処理を行う
 
     let NowDateTime = getDateTime() //更新日時の取得
 
     listDatas.value.push({
       id: id++,
-      title: addTitle.value,
+      title: addTitle,
       isDone: false,
       createdAt: NowDateTime,
     })
-    addTitle.value = ''
   }
 }
 
@@ -141,17 +140,8 @@ function dataValidation(title) {
   </header>
 
   <main id="main-area">
-    <!-- TOD追加エリア -->
-    <div id="add-area">
-      <input
-        v-model="addTitle"
-        type="text"
-        id="add-title"
-        placeholder="新しいタスクを追加"
-        :disabled="isEditing"
-      />
-      <button @click="listAddNewTodo" :disabled="isEditing">追加</button>
-    </div>
+    <!-- TODO追加エリア -->
+    <todoAddArea :isEditing="isEditing" @addTodo:addTitle="listAddNewTodo" />
 
     <!-- TODOmemoヘッダ -->
     <div id="list-area">
@@ -221,11 +211,13 @@ function dataValidation(title) {
       </p>
     </div>
 
-    <div id="switching-area">
-      タスク表示<br />
-      <button @click="filterMode = FILTER_MODES.ALL" :disabled="isEditing">すべて</button>
-      <button @click="filterMode = FILTER_MODES.NOTISDONE" :disabled="isEditing">未完了</button>
-      <button @click="filterMode = FILTER_MODES.ISDONE" :disabled="isEditing">完了済</button>
-    </div>
+    <!-- タスク表示切替エリア-->
+    <todoSwitchingArea
+      :isEditing="isEditing"
+      :ALL="FILTER_MODES.ALL"
+      :NOTISDONE="FILTER_MODES.NOTISDONE"
+      :ISDONE="FILTER_MODES.ISDONE"
+      @filterMode:mode="filterMode = $event"
+    />
   </main>
 </template>
