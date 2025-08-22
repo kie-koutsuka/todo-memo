@@ -2,8 +2,7 @@
 import { computed, ref } from 'vue'
 import todoAddArea from './todoAddArea.vue'
 import todoSwitchingArea from './todoSwitchingArea.vue'
-
-const editTitle = ref('') //TODO更新用
+import todoLists from './todoLists.vue'
 
 let id = 1 //TODOのID(内部用)
 
@@ -76,24 +75,23 @@ function listDel(todo) {
   }
 }
 
-function listEdit(id, title) {
+function listEdit(id) {
   //TODOリストのアイテム編集
   isEditing.value = true //編集中
   isEditingId.value = id //編集中の行ID
-  editTitle.value = title //編集前テキスト
 }
 
-function updateTitle(listdata) {
+function updateTitle({ id, editTitle }) {
   //TODO明細行更新ボタン押下時処理
-  if (dataValidation(editTitle.value)) {
-    //バリデーションチェック OKだったら処理を行う
 
-    listdata.title = editTitle.value //データ更新
+  if (dataValidation(editTitle)) {
+    //バリデーションチェック OKだったら処理を行う
+    const updateListData = listDatas.value.find((t) => t.id === id) //配列から対象の明細を探す
+    updateListData.title = editTitle //更新
 
     //データ更新後の処理
     isEditing.value = false //未編集中
     isEditingId.value = 0 // 編集中の行IDなし
-    editTitle.value = ''
   }
 }
 
@@ -118,18 +116,30 @@ function getDateTime() {
 
 function dataValidation(title) {
   //追加・更新時にデータのバリデーションを行い、必要なメッセージを表示
-  if (!(title.trim().length > 1)) {
-    //空文字更新チェック
-    alert('入力してください')
-    return false
-  }
-  if (!isEditing.value && listDatas.value.length >= 20) {
-    //件数チェック(20件)まで登録可能
-    alert('20件までしか追加できません。タスクを削除してください。')
-    return false
-  }
+  try {
+    if (!title || typeof title !== 'string') {
+      alert('値が不正です')
 
-  return true
+      return false
+    }
+
+    if (!(title.trim().length > 1)) {
+      //空文字更新チェック
+      alert('入力してください')
+      return false
+    }
+    if (!isEditing.value && listDatas.value.length >= 20) {
+      //件数チェック(20件)まで登録可能
+      alert('20件までしか追加できません。タスクを削除してください。')
+      return false
+    }
+
+    return true
+  } catch (e) {
+    alert('予期せぬエラーが発生しました')
+    console.error('Error内容:', e)
+    return false
+  }
 }
 </script>
 
@@ -141,7 +151,11 @@ function dataValidation(title) {
 
   <main id="main-area">
     <!-- TODO追加エリア -->
-    <todoAddArea :isEditing="isEditing" @addTodo:addTitle="listAddNewTodo" />
+    <todoAddArea
+      :isEditing="isEditing"
+      :isEditingId="isEditingId"
+      @addTodo:addTitle="listAddNewTodo"
+    />
 
     <!-- TODOmemoヘッダ -->
     <div id="list-area">
@@ -152,55 +166,15 @@ function dataValidation(title) {
       </div>
 
       <!-- TODOmemo明細 -->
-      <div
-        v-for="listData in filterListDatas"
-        :key="listData.id"
-        class="list-detail"
-        :class="{ isDone: listData.isDone, edit: isEditingId === listData.id }"
-      >
-        <!--完了/未完了チェックボックス-->
-        <div class="isDone-checkbox">
-          <input v-model="listData.isDone" class="checkbox" type="checkbox" :disabled="isEditing" />
-        </div>
-
-        <!--TODO更新用フォーム-->
-        <input
-          v-if="isEditing && isEditingId === listData.id"
-          v-model="editTitle"
-          type="text"
-          id="edit-title"
-        />
-        <!--TODO通常表示用フォーム-->
-        <div class="task" v-else>
-          <span :class="{ isDone: listData.isDone }">{{ listData.title }}</span
-          ><br />
-          <small>{{ listData.createdAt }}</small>
-        </div>
-
-        <div class="actionbutton">
-          <!--TODO更新用ボタン-->
-          <div class="edit-actionbutton" v-if="isEditing && isEditingId === listData.id">
-            <button @click="updateTitle(listData)">更新</button>
-            <button @click="cancelUpdateTitle">ｷｬﾝｾﾙ</button>
-          </div>
-
-          <!--通常表示用ボタン-->
-          <div class="default-actionbutton" v-else>
-            <div id="button-layout">
-              <button
-                @click="listEdit(listData.id, listData.title)"
-                :disabled="isEditing && isEditingId !== listData.id"
-                v-show="!listData.isDone"
-              >
-                編集
-              </button>
-            </div>
-            <button @click="listDel(listData)" :disabled="isEditing && isEditingId !== listData.id">
-              削除
-            </button>
-          </div>
-        </div>
-      </div>
+      <todoLists
+        :listDatas="filterListDatas"
+        :isEditing="isEditing"
+        :isEditingId="isEditingId"
+        @listDel:listData="listDel"
+        @listEdit:id="listEdit"
+        @cancelUpdateTitle="cancelUpdateTitle"
+        @updateTitle="updateTitle"
+      />
 
       <!-- TODOmemoサマリ-->
       <p id="summary-area">
