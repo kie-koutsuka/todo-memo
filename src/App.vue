@@ -3,16 +3,15 @@ import { computed, ref } from 'vue'
 import todoAddArea from './todoAddArea.vue'
 import todoSwitchingArea from './todoSwitchingArea.vue'
 import todoLists from './todoLists.vue'
+import { getDateTime, dataValidation } from './utils.js'
+import { FILTER_MODES } from './constants.js'
 
 let id = 1 //TODOのID(内部用)
 
 const listDatas = ref([]) //TODOリスト表示用配列
 
-//フィルターモード定数
-//all(すべて)NotIsDone(未完了)IsDone(完了済)
-const FILTER_MODES = { ALL: 'all', NOTISDONE: 'NotIsDone', ISDONE: 'IsDone' }
-
 //フィルターモード切替え用コンスト。初期値はタスクすべて表示
+//all(すべて)NotIsDone(未完了)IsDone(完了済)
 const filterMode = ref(FILTER_MODES.ALL)
 
 //フィルターモード切替え
@@ -53,7 +52,7 @@ const summaryNotIsDone = computed(() => {
 
 function listAddNewTodo(addTitle) {
   //TODOリストにアイテム追加
-  if (dataValidation(addTitle)) {
+  if (dataValidation(addTitle, isEditing.value, listDatas.value)) {
     //バリデーションチェック OKだったら処理を行う
 
     let NowDateTime = getDateTime() //更新日時の取得
@@ -84,7 +83,7 @@ function listEdit(id) {
 function updateTitle({ id, editTitle }) {
   //TODO明細行更新ボタン押下時処理
 
-  if (dataValidation(editTitle)) {
+  if (dataValidation(editTitle, isEditing.value, listDatas.value)) {
     //バリデーションチェック OKだったら処理を行う
     const updateListData = listDatas.value.find((t) => t.id === id) //配列から対象の明細を探す
     updateListData.title = editTitle //更新
@@ -99,47 +98,6 @@ function cancelUpdateTitle() {
   //TODO明細行ｷｬﾝｾﾙボタン押下時処理
   isEditing.value = false //未編集中
   isEditingId.value = 0 // 編集中の行IDなし
-}
-
-function getDateTime() {
-  //追加・更新日時取得
-  let date = new Date()
-
-  let YYYY = date.getFullYear() //年
-  let MM = String(date.getMonth() + 1).padStart(2, '0') //月
-  let DD = String(date.getDate()).padStart(2, '0') //日
-  let hh = String(date.getHours()).padStart(2, '0') //時間
-  let mm = String(date.getMinutes()).padStart(2, '0') //分
-
-  return YYYY + '-' + MM + '-' + DD + ' ' + hh + ':' + mm
-}
-
-function dataValidation(title) {
-  //追加・更新時にデータのバリデーションを行い、必要なメッセージを表示
-  try {
-    if (!title || typeof title !== 'string') {
-      alert('値が不正です')
-
-      return false
-    }
-
-    if (!(title.trim().length > 1)) {
-      //空文字更新チェック
-      alert('入力してください')
-      return false
-    }
-    if (!isEditing.value && listDatas.value.length >= 20) {
-      //件数チェック(20件)まで登録可能
-      alert('20件までしか追加できません。タスクを削除してください。')
-      return false
-    }
-
-    return true
-  } catch (e) {
-    alert('予期せぬエラーが発生しました')
-    console.error('Error内容:', e)
-    return false
-  }
 }
 </script>
 
