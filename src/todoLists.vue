@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import editTitleTextBox from './editTitleTextBox.vue'
 //イベント宣言
 const props = defineProps({ listDatas: Array, isEditingId: Number, isEditing: Boolean })
 const emit = defineEmits(['listDel:listData', 'listEdit:id', 'cancelUpdateTitle', 'updateTitle'])
@@ -30,12 +31,10 @@ function updateButtonClick(id) {
     </div>
 
     <!--TODO更新用フォーム-->
-    <input
-      v-if="props.isEditing && props.isEditingId === listData.id"
-      v-model="editTitle"
-      type="text"
-      id="edit-title"
-    />
+    <div v-if="props.isEditing && props.isEditingId === listData.id">
+      <editTitleTextBox v-model="editTitle" />
+    </div>
+
     <!--TODO通常表示用フォーム-->
     <div class="task" v-else>
       <span :class="{ isDone: listData.isDone }">{{ listData.title }}</span
